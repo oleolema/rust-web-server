@@ -67,10 +67,11 @@ impl HttpRequest {
     pub fn new(s: &str) -> Self {
         let (first_line, headers, body) = parse_http_request(s);
         let mut first_line = first_line.split_ascii_whitespace();
-        let method: HttpMethod = first_line.next().unwrap().into();
-        let path: String = first_line.next().unwrap().into();
-        let version: HttpVersion = first_line.next().unwrap().into();
-        let headers = headers.iter().map(|it| parse_header(it).unwrap()).collect();
+        let method: HttpMethod = first_line.next().map_or(HttpMethod::UNDEFINED, |it| it.into());
+        let path: String = first_line.next().map_or("".to_string(), |it| it.into());
+        let version: HttpVersion = first_line.next().map_or(HttpVersion::UNDEFINED, |it| it.into());
+        let headers = headers.iter().map(|it| parse_header(it))
+            .filter(|it| it.is_ok()).map(|it| it.unwrap()).collect();
         let body = body.map(|it| it.to_string());
         let url = Url::parse(&format!("{}{}", "http://undefined", &path)).unwrap();
         HttpRequest { method, path: url.path().to_string(), version, headers, body, url }
@@ -118,7 +119,6 @@ fn parse_http_request(value: &str) -> (String, Vec<String>, Option<&str>) {
         }
     }
     body_start_index = body_start_index + value[body_start_index..].find('\n').map(|it| it + 1).unwrap_or(0);
-    // let body_end_index = body_start_index + &value[body_start_index..].rfind('\n').map(|it| it - 1).unwrap_or(0);
     let body_end_index = value.len();
     let body = if body_start_index < body_end_index { Some(&value[body_start_index..body_end_index]) } else { None };
     return (first_line, header_list, body);

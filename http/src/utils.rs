@@ -15,7 +15,7 @@ impl<T: Read> MyRead for T {
         // Wrap the stream in a BufReader, so we can use the BufRead methods
         let mut reader = BufReader::new(self);
         // Read current current data in the TcpStream
-        let received = String::from_utf8(reader.fill_buf()?.to_vec()).unwrap();
+        let received = String::from_utf8(reader.fill_buf()?.to_vec())?;
         reader.consume(received.len());
         Ok(received)
     }
@@ -26,7 +26,7 @@ impl<T: Read> MyRead for T {
         let mut reader = BufReader::new(self);
         // Read current current data in the TcpStream
         let mut vec = Vec::new();
-        reader.read_to_end(&mut vec).unwrap();
+        reader.read_to_end(&mut vec)?;
         // let received = reader.fill_buf()?.to_vec();
         // reader.consume(received.len());
         Ok(vec)

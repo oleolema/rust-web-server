@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use crate::request::{HttpVersion};
 use std::str;
+
+use crate::request::HttpVersion;
 
 #[derive(Debug)]
 pub struct HttpResponse {
@@ -74,7 +75,7 @@ impl HttpResponse {
     }
 
     pub fn body_str_ref(&self) -> Option<&str> {
-        self.body.as_ref().map(|it| str::from_utf8(it).unwrap())
+        self.body.as_ref().and_then(|it| str::from_utf8(it).ok())
     }
 }
 

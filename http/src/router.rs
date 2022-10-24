@@ -6,11 +6,11 @@ use crate::request::{HttpMethod, HttpRequest};
 pub trait RequestMapping {
     fn predicate(&self, http_request: &HttpRequest) -> bool;
 
-    fn handle(&mut self, http_channel: &mut HttpChannel) -> Result<(), Box<dyn Error>>;
+    fn handle(&self, http_channel: &mut HttpChannel) -> Result<(), Box<dyn Error>>;
 }
 
 pub enum RegexMapping<F>
-    where F: FnMut(&mut HttpChannel) -> Result<(), Box<dyn Error>>
+    where F: Fn(&mut HttpChannel) -> Result<(), Box<dyn Error>>
 {
     // matches GET requests
     GET(Regex, F),
@@ -21,7 +21,7 @@ pub enum RegexMapping<F>
 }
 
 impl<F> RequestMapping for RegexMapping<F>
-    where F: FnMut(&mut HttpChannel) -> Result<(), Box<dyn Error>>
+    where F: Fn(&mut HttpChannel) -> Result<(), Box<dyn Error>>
 {
     fn predicate(&self, http_request: &HttpRequest) -> bool {
         match self {
@@ -35,7 +35,7 @@ impl<F> RequestMapping for RegexMapping<F>
         }
     }
 
-    fn handle(&mut self, http_channel: &mut HttpChannel) -> Result<(), Box<dyn Error>> {
+    fn handle(&self, http_channel: &mut HttpChannel) -> Result<(), Box<dyn Error>> {
         match self {
             RegexMapping::GET(_, f) => f(http_channel),
             RegexMapping::POST(_, f) => f(http_channel),
@@ -45,7 +45,7 @@ impl<F> RequestMapping for RegexMapping<F>
 }
 
 pub struct HttpRouter<'b> {
-    mappings: Vec<Box<dyn RequestMapping + 'b>>,
+    mappings: Vec<Box<dyn RequestMapping + Send + Sync + 'b>>,
 }
 
 impl<'b> HttpRouter<'b> {
@@ -53,13 +53,13 @@ impl<'b> HttpRouter<'b> {
         HttpRouter { mappings: Vec::new() }
     }
 
-    pub fn route(&mut self, request_mapping: Box<dyn RequestMapping + 'b>) -> &mut Self {
+    pub fn route(&mut self, request_mapping: Box<dyn RequestMapping + Send + Sync + 'b>) -> &mut Self {
         self.mappings.push(request_mapping);
         self
     }
 
-    pub fn handle(&mut self, http_channel: &mut HttpChannel) -> Result<(), Box<dyn Error>> {
-        self.mappings.iter_mut().find(|it| it.predicate(http_channel.request))
+    pub fn handle(&self, http_channel: &mut HttpChannel) -> Result<(), Box<dyn Error>> {
+        self.mappings.iter().find(|it| it.predicate(http_channel.request))
             .map(|it| it.handle(http_channel))
             .unwrap_or_else(|| {
                 http_channel.response.not_found();

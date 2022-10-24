@@ -17,7 +17,7 @@ impl HttpResponse {
         HttpResponse { code: 200, message: String::from("OK"), version: HttpVersion::V1, headers, body: None }
     }
 
-    pub fn ok(&mut self) -> &mut Self {
+    pub fn success(&mut self) -> &mut Self {
         self.code = 200;
         self.message = String::from("OK");
         self
@@ -26,18 +26,21 @@ impl HttpResponse {
     pub fn bad_request(&mut self) -> &mut Self {
         self.code = 400;
         self.message = String::from("Bad Request");
+        self.body(String::from("400 Bad Request"));
         self
     }
 
     pub fn not_found(&mut self) -> &mut Self {
         self.code = 404;
         self.message = String::from("Not Found");
+        self.body(String::from("404 Not Found"));
         self
     }
 
     pub fn error(&mut self) -> &mut Self {
         self.code = 500;
         self.message = String::from("Server Error");
+        self.body(String::from("500 Server Error"));
         self
     }
 }
@@ -86,7 +89,7 @@ mod test {
     #[test]
     fn test_has_body() {
         let mut r1 = HttpResponse::new();
-        r1.ok();
+        r1.success();
         r1.body(String::from("hello world"));
         dbg!(r1.to_string());
         assert_eq!("HTTP/1.1 200 OK", r1.to_string().lines().next().unwrap());
@@ -97,7 +100,7 @@ mod test {
     #[test]
     fn test_no_body() {
         let mut r1 = HttpResponse::new();
-        r1.ok();
+        r1.success();
         dbg!(r1.to_string());
         assert_eq!("HTTP/1.1 200 OK", r1.to_string().lines().next().unwrap());
         assert_eq!(None, r1.headers.get("Content-Length"));

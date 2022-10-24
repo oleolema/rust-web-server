@@ -8,14 +8,14 @@ use crate::router::RequestMapping;
 use crate::utils::MyRead;
 
 
-struct StaticMapping {
+pub struct StaticMapping {
     static_path: Vec<Regex>,
 }
 
 impl StaticMapping {
-    fn new(static_path: Vec<Regex>) -> Self {
+    pub fn new() -> Self {
         Self {
-            static_path
+            static_path: vec![Regex::new(r"^/static/").unwrap()]
         }
     }
 }
@@ -27,11 +27,12 @@ impl RequestMapping for StaticMapping {
     }
 
     fn handle(&mut self, channel: &mut HttpChannel) -> Result<(), Box<dyn Error>> {
-        let path = format!(".{}", &channel.request.path);
-        let mut file = File::open(&path)
-            .or(Err(format!("the file opening error {}", path)))?;
-        channel.stream.write_all(&file.read_all_vec().unwrap())?;
-        channel.stream.flush()?;
+        let mut path = format!(".{}", &channel.request.path);
+        if path.ends_with("/") {
+            path += "index.html";
+        }
+        let mut file = File::open(&path).or(Err(format!("resource not found: {}", path)))?;
+        channel.send(&file.read_all_vec().unwrap())?;
         Ok(())
     }
 }
@@ -55,7 +56,7 @@ mod test {
         let mut stream = TcpStream::connect("127.0.0.1:8081").unwrap();
         let mut incoming = listener.incoming();
         let mut channel = HttpChannel::new(&http_request, &mut http_response, &mut stream);
-        let mut static_mapping = StaticMapping::new(vec![]);
+        let mut static_mapping = StaticMapping::new();
         static_mapping.predicate(&http_request);
         static_mapping.handle(&mut channel).expect("TODO: panic message");
         let s = incoming.next();
@@ -66,7 +67,7 @@ mod test {
 
     #[test]
     fn test1() {
-        let a = fs::read_to_string("./hello.html").unwrap();
+        let a = fs::read_to_string("./static/hello.html").unwrap();
         println!("{}", a);
     }
 }

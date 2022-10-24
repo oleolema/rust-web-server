@@ -1,5 +1,5 @@
 ### Send POST request with json body
-POST http://localhost:8080/post
+POST http://localhost:8085/post
 Content-Type: application/json
 
 {
@@ -12,13 +12,13 @@ Content-Type: application/json
 
 
 ### Send POST request with body as parameters
-POST http://localhost:8080/post
+POST http://localhost:8085/post
 Content-Type: application/x-www-form-urlencoded
 
 id=999&value=content
 
 ### Send a form with the text and file fields
-POST http://localhost:8080/post
+POST http://localhost:8085/post
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
@@ -34,7 +34,7 @@ Content-Type: application/json
 --WebAppBoundary--
 
 ### Send request with dynamic variables in request's body
-POST http://localhost:8080/post
+POST http://localhost:8085/post
 Content-Type: application/json
 
 {

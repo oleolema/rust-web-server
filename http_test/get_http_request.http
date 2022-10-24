@@ -1,7 +1,7 @@
 ### GET request with a header
-GET http://localhost:8080
+GET http://localhost:8085
 Accept: application/json
 
 ### GET request with parameter
-GET http://localhost:8080/get?show_env=1&id=abc
+GET http://localhost:8085/get?show_env=1&id=abc
 Accept: application/json

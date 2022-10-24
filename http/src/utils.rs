@@ -4,8 +4,6 @@ use std::net::{TcpListener, TcpStream};
 use std::str;
 use std::thread::sleep;
 
-const ASCII_ETX: u8 = 0x03;
-
 
 pub fn get_stream() -> TcpStream {
     let listener = TcpListener::bind("127.0.0.1:8081").unwrap();
@@ -18,7 +16,7 @@ impl<T: Read> MyRead for T {
     fn read_all_string(&mut self) -> Result<String, Box<dyn Error>> {
         // Wrap the stream in a BufReader, so we can use the BufRead methods
         let mut reader = BufReader::new(self);
-        // Read current current data in the TcpStreamkik
+        // Read current current data in the TcpStream
         let received = String::from_utf8(reader.fill_buf()?.to_vec()).unwrap();
         reader.consume(received.len());
         Ok(received)
@@ -28,9 +26,9 @@ impl<T: Read> MyRead for T {
     fn read_all_vec(&mut self) -> Result<Vec<u8>, Box<dyn Error>> {
         // Wrap the stream in a BufReader, so we can use the BufRead methods
         let mut reader = BufReader::new(self);
-        // Read current current data in the TcpStreamkik
+        // Read current current data in the TcpStream
         let mut vec = Vec::new();
-        reader.read_to_end(&mut vec).expect("TODO: panic message");
+        reader.read_to_end(&mut vec).unwrap();
         // let received = reader.fill_buf()?.to_vec();
         // reader.consume(received.len());
         Ok(vec)
@@ -49,6 +47,7 @@ impl<T: Read> MyRead for T {
         }
         Ok(input)
     }
+
 }
 
 pub trait MyRead {

@@ -6,7 +6,6 @@ use crate::request::{HttpMethod, HttpRequest};
 use crate::router::RequestMapping;
 use crate::utils::MyRead;
 
-
 pub struct StaticMapping {
     static_path: Vec<Regex>,
 }

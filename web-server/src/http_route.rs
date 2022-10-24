@@ -1,9 +1,7 @@
 use std::error::Error;
 use std::thread;
 use std::time::Duration;
-
 use regex::Regex;
-
 use http::channel::HttpChannel;
 use http::router::{HttpRouter, RegexMapping};
 use http::static_mapping::StaticMapping;

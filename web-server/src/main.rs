@@ -47,11 +47,8 @@ fn handle_connection(mut stream: TcpStream, router: &HttpRouter) -> Result<(), B
         return Ok(());
     }
     let http_request = HttpRequest::new(&input);
-
     let mut http_response = HttpResponse::new();
     let mut http_channel = HttpChannel::new(&http_request, &mut http_response, &mut stream);
-
-
     if let Err(e) = router.handle(&mut http_channel) {
         eprintln!("handle error: {}", e);
         http_channel.response.error().body_str(e.to_string());
@@ -61,8 +58,6 @@ fn handle_connection(mut stream: TcpStream, router: &HttpRouter) -> Result<(), B
         http_channel.stream.write(dbg!(output).as_bytes())?;
         http_channel.stream.flush()?;
     }
-
-
     Ok(())
 }
 

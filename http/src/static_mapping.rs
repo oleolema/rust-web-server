@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{BufRead, BufReader, IoSlice, Read, Seek, Write};
 use regex::Regex;
 use crate::channel::HttpChannel;
 use crate::request::{HttpMethod, HttpRequest};
@@ -30,18 +30,8 @@ impl RequestMapping for StaticMapping {
         let path = format!(".{}", &channel.request.path);
         let mut file = File::open(&path)
             .or(Err(format!("the file opening error {}", path)))?;
-        const BUFFER_LEN: usize = 1024;
-        let mut buffer = [0; BUFFER_LEN];
-
-        loop {
-            let n = file.read(&mut buffer)?;
-            channel.stream.write(&buffer[0..n])?;
-
-            if n < BUFFER_LEN {
-                channel.stream.flush()?;
-                break;
-            }
-        }
+        channel.stream.write_all(&file.read_all_vec().unwrap())?;
+        channel.stream.flush()?;
         Ok(())
     }
 }

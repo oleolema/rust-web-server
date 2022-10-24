@@ -1,4 +1,4 @@
-use std::io::{ Write};
+use std::io::{Write};
 use std::net::{TcpListener, TcpStream};
 use std::error::Error;
 use http::channel::HttpChannel;
@@ -18,9 +18,8 @@ fn main() {
 }
 
 fn handle_connection(mut stream: TcpStream, router: &mut HttpRouter) -> Result<(), Box<dyn Error>> {
-    let input = stream.read_all_string()?;
+    let input = stream.read_string()?;
     let http_request = HttpRequest::new(&input);
-    dbg!(&input);
 
     let mut http_response = HttpResponse::new();
     let mut http_channel = HttpChannel::new(&http_request, &mut http_response, &mut stream);
@@ -33,3 +32,4 @@ fn handle_connection(mut stream: TcpStream, router: &mut HttpRouter) -> Result<(
     stream.flush().unwrap();
     Ok(())
 }
+

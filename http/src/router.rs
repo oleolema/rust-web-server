@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::net::{TcpListener, TcpStream};
 use regex::{Regex};
 use crate::channel::HttpChannel;
 use crate::request::{HttpMethod, HttpRequest};
@@ -72,7 +71,6 @@ impl<'b> HttpRouter<'b> {
 
 #[cfg(test)]
 mod test {
-    use std::net::TcpStream;
     use super::*;
     use crate::request::*;
     use crate::response::HttpResponse;
@@ -83,23 +81,23 @@ mod test {
         let mut router = HttpRouter::new();
         router.route(Box::new(RegexMapping::GET(Regex::new(r"^/hello").unwrap(),
                                                 |channel| {
-                                                    channel.response.body(String::from("hello"));
+                                                    channel.response.body_str(String::from("hello"));
                                                     Ok(())
                                                 })));
 
         router.route(Box::new(RegexMapping::GET(Regex::new(r"^/world").unwrap(),
                                                 |channel| {
-                                                    channel.response.body(String::from("world"));
+                                                    channel.response.body_str(String::from("world"));
                                                     Ok(())
                                                 })));
         let http_request: HttpRequest = HttpRequest::new("GET /hello HTTP/1.1\n\n");
         let mut http_response = HttpResponse::new();
-        let mut stream= get_stream();
+        let mut stream = get_stream(8090);
         let mut channel = HttpChannel::new(&http_request, &mut http_response, &mut stream);
 
         router.handle(&mut channel).unwrap();
         let response = channel.response;
-        assert_eq!("hello", response.body_ref().unwrap())
+        assert_eq!("hello", response.body_str_ref().unwrap())
     }
 
     #[test]

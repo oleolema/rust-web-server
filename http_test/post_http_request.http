@@ -7,10 +7,6 @@ Content-Type: application/json
   "value": "content"
 }
 
-
-
-
-
 ### Send POST request with body as parameters
 POST http://localhost:8085/post
 Content-Type: application/x-www-form-urlencoded

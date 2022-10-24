@@ -2,12 +2,10 @@ use std::error::Error;
 use std::io::{BufRead, BufReader, Read};
 use std::net::{TcpListener, TcpStream};
 use std::str;
-use std::thread::sleep;
 
-
-pub fn get_stream() -> TcpStream {
-    let listener = TcpListener::bind("127.0.0.1:8081").unwrap();
-    let stream = TcpStream::connect("127.0.0.1:8081").unwrap();
+pub fn get_stream(port: i32) -> TcpStream {
+    let listener = TcpListener::bind(format!("127.0.0.1:{}", port)).unwrap();
+    let stream = TcpStream::connect(format!("127.0.0.1:{}", port)).unwrap();
     let _ = listener.incoming();
     stream
 }
@@ -47,7 +45,6 @@ impl<T: Read> MyRead for T {
         }
         Ok(input)
     }
-
 }
 
 pub trait MyRead {

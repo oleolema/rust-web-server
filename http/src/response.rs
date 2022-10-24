@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::request::{HttpVersion};
+use std::str;
 
 #[derive(Debug)]
 pub struct HttpResponse {
@@ -7,7 +8,7 @@ pub struct HttpResponse {
     pub message: String,
     pub version: HttpVersion,
     pub headers: HashMap<String, String>,
-    body: Option<String>,
+    body: Option<Vec<u8>>,
 }
 
 impl HttpResponse {
@@ -26,21 +27,21 @@ impl HttpResponse {
     pub fn bad_request(&mut self) -> &mut Self {
         self.code = 400;
         self.message = String::from("Bad Request");
-        self.body(String::from("400 Bad Request"));
+        self.body_str(String::from("400 Bad Request"));
         self
     }
 
     pub fn not_found(&mut self) -> &mut Self {
         self.code = 404;
         self.message = String::from("Not Found");
-        self.body(String::from("404 Not Found"));
+        self.body_str(String::from("404 Not Found"));
         self
     }
 
     pub fn error(&mut self) -> &mut Self {
         self.code = 500;
         self.message = String::from("Server Error");
-        self.body(String::from("500 Server Error"));
+        self.body_str(String::from("500 Server Error"));
         self
     }
 }
@@ -56,14 +57,24 @@ impl HttpResponse {
         self
     }
 
-    pub fn body(&mut self, body: String) -> &mut Self {
+    pub fn body_str(&mut self, body: String) -> &mut Self {
+        self.header(String::from("Content-Length"), body.len().to_string());
+        self.body = Some(body.into());
+        self
+    }
+
+    pub fn body(&mut self, body: Vec<u8>) -> &mut Self {
         self.header(String::from("Content-Length"), body.len().to_string());
         self.body = Some(body);
         self
     }
 
-    pub fn body_ref(&self) -> Option<&str> {
+    pub fn body_ref(&self) -> Option<&[u8]> {
         self.body.as_ref().map(|it| &it[..])
+    }
+
+    pub fn body_str_ref(&self) -> Option<&str> {
+        self.body.as_ref().map(|it| str::from_utf8(it).unwrap())
     }
 }
 
@@ -72,7 +83,7 @@ impl From<&HttpResponse> for String {
         let first_line = format!("{} {} {}", response.version.to_string(), response.code, response.message);
         let headers = response.headers.iter().map(|it| format!("{}: {}", it.0, it.1))
             .reduce(|acc, it| format!("{}\n{}", acc, it)).unwrap_or_else(|| "".to_string());
-        format!("{}\n{}\n\n{}", first_line, headers, response.body_ref().unwrap_or_else(|| ""))
+        format!("{}\n{}\n\n{}", first_line, headers, response.body_str_ref().unwrap_or_else(|| ""))
     }
 }
 
@@ -90,11 +101,11 @@ mod test {
     fn test_has_body() {
         let mut r1 = HttpResponse::new();
         r1.success();
-        r1.body(String::from("hello world"));
+        r1.body_str(String::from("hello world"));
         dbg!(r1.to_string());
         assert_eq!("HTTP/1.1 200 OK", r1.to_string().lines().next().unwrap());
         assert_eq!(Some(&"11".to_string()), r1.headers.get("Content-Length"));
-        assert_eq!(Some("hello world"), r1.body_ref());
+        assert_eq!(Some("hello world"), r1.body_str_ref());
     }
 
     #[test]

@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use multimap::MultiMap;
 use regex::Regex;
 use url::{Url};
-use std::net::{TcpListener, TcpStream};
 
 #[derive(Debug, PartialEq)]
 pub enum HttpMethod {
@@ -65,7 +64,7 @@ pub struct HttpRequest {
 }
 
 impl HttpRequest {
-    pub fn new( s: &str) -> Self {
+    pub fn new(s: &str) -> Self {
         let (first_line, headers, body) = parse_http_request(s);
         let mut first_line = first_line.split_ascii_whitespace();
         let method: HttpMethod = first_line.next().unwrap().into();
@@ -86,6 +85,10 @@ impl HttpRequest {
 
     pub fn query_pair(&self) -> MultiMap<String, String> {
         self.url.query_pairs().into_owned().collect()
+    }
+
+    pub fn body(&self) -> Option<&str> {
+        self.body.as_ref().map(|it| &it[..])
     }
 }
 
@@ -121,13 +124,6 @@ fn parse_http_request(value: &str) -> (String, Vec<String>, Option<&str>) {
     return (first_line, header_list, body);
 }
 
-fn get_stream() -> TcpStream {
-    let listener = TcpListener::bind("127.0.0.1:8081").unwrap();
-    let stream = TcpStream::connect("127.0.0.1:8081").unwrap();
-    let _ = listener.incoming();
-    stream
-}
-
 #[cfg(test)]
 mod test {
     use std::net::TcpListener;
@@ -145,7 +141,7 @@ Connection: keep-alive
 Upgrade-Insecure-Requests: 1
 
 ";
-        let http_request: HttpRequest = HttpRequest::new( s);
+        let http_request: HttpRequest = HttpRequest::new(s);
         println!("{:?}", http_request);
         assert!(http_request.path_match(&Regex::new(r"^/.*").unwrap()));
         assert!(http_request.path_match(&Regex::new(r"^/a/.*").unwrap()));
@@ -159,7 +155,7 @@ Upgrade-Insecure-Requests: 1
         let s = "GET /a/b/c HTTP/1.1
 
 ";
-        let http_request: HttpRequest = HttpRequest::new( s);
+        let http_request: HttpRequest = HttpRequest::new(s);
         println!("{:?}", http_request);
     }
 
@@ -197,7 +193,7 @@ hello body
         let s = "GET /get?show_env=1&id=abc&id=efg HTTP/1.1
 
     ";
-        let http_request: HttpRequest = HttpRequest::new( s);
+        let http_request: HttpRequest = HttpRequest::new(s);
         println!("{:?}", http_request);
         println!("{:?}", http_request.query());
         assert_eq!(http_request.query(), Some("show_env=1&id=abc&id=efg"));

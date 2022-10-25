@@ -27,15 +27,13 @@ impl RequestMapping for StaticMapping {
     fn handle(&self, channel: &mut HttpChannel) -> Result<(), Box<dyn Error>> {
         let base_path = format!(".{}", &channel.request.path);
         let mut path = base_path.clone();
-        if !path.ends_with(".html") {
-            if path.ends_with("/") {
-                path += "index.html";
-            } else {
-                path += ".html";
-            }
+        if path.ends_with("/") {
+            path += "index.html";
         }
-        let mut file = File::open(&path).or(Err(format!("resource not found: {}", path)))?;
-        channel.send(&file.read_all_vec()?)?;
+        match File::open(&path).or_else(|_| File::open(format!("{}.html", base_path))) {
+            Ok(mut file) => channel.send(&file.read_all_vec()?)?,
+            Err(_) => { channel.response.not_found().body(format!("resource not found: {}", path).clone().into()); }
+        };
         Ok(())
     }
 }

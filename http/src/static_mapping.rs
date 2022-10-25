@@ -30,7 +30,7 @@ impl RequestMapping for StaticMapping {
         if path.ends_with("/") {
             path += "index.html";
         }
-        match File::open(&path).or_else(|_| File::open(format!("{}.html", base_path))) {
+        match File::open(&path.replace("/",&std::path::MAIN_SEPARATOR.to_string())).or_else(|_| File::open(format!("{}.html", base_path))) {
             Ok(mut file) => channel.send(&file.read_all_vec()?)?,
             Err(_) => { channel.response.not_found().body(format!("resource not found: {}", path).clone().into()); }
         };

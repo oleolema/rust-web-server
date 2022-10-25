@@ -60,7 +60,7 @@ mod test {
         let mut stream = TcpStream::connect("127.0.0.1:8081").unwrap();
         let mut incoming = listener.incoming();
         let mut channel = HttpChannel::new(&http_request, &mut http_response, &mut stream);
-        let mut static_mapping = StaticMapping::new();
+        let static_mapping = StaticMapping::new();
         static_mapping.predicate(&http_request);
         static_mapping.handle(&mut channel).expect("TODO: panic message");
         let s = incoming.next();
